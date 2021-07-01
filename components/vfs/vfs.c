@@ -811,21 +811,24 @@ static int set_global_fd_sets(const fds_triple_t *vfs_fds_triple, int size, fd_s
         const fds_triple_t *item = &vfs_fds_triple[i];
         if (item->isset) {
             for (int fd = 0; fd < MAX_FDS; ++fd) {
-                const int local_fd = s_fd_table[fd].local_fd; // single read -> no locking is required
-                if (readfds && esp_vfs_safe_fd_isset(local_fd, &item->readfds)) {
-                    ESP_LOGD(TAG, "FD %d in readfds was set from VFS ID %d", fd, i);
-                    FD_SET(fd, readfds);
-                    ++ret;
-                }
-                if (writefds && esp_vfs_safe_fd_isset(local_fd, &item->writefds)) {
-                    ESP_LOGD(TAG, "FD %d in writefds was set from VFS ID %d", fd, i);
-                    FD_SET(fd, writefds);
-                    ++ret;
-                }
-                if (errorfds && esp_vfs_safe_fd_isset(local_fd, &item->errorfds)) {
-                    ESP_LOGD(TAG, "FD %d in errorfds was set from VFS ID %d", fd, i);
-                    FD_SET(fd, errorfds);
-                    ++ret;
+                if (s_fd_table[fd].vfs_index == i) {
+                    const int local_fd = s_fd_table[fd].local_fd; // single read -> no locking is required
+                    ESP_LOGD(TAG, "fd: %d, local_fd: %d", fd, local_fd);
+                    if (readfds && esp_vfs_safe_fd_isset(local_fd, &item->readfds)) {
+                        ESP_LOGD(TAG, "FD %d in readfds was set from VFS ID %d", fd, i);
+                        FD_SET(fd, readfds);
+                        ++ret;
+                    }
+                    if (writefds && esp_vfs_safe_fd_isset(local_fd, &item->writefds)) {
+                        ESP_LOGD(TAG, "FD %d in writefds was set from VFS ID %d", fd, i);
+                        FD_SET(fd, writefds);
+                        ++ret;
+                    }
+                    if (errorfds && esp_vfs_safe_fd_isset(local_fd, &item->errorfds)) {
+                        ESP_LOGD(TAG, "FD %d in errorfds was set from VFS ID %d", fd, i);
+                        FD_SET(fd, errorfds);
+                        ++ret;
+                    }
                 }
             }
         }
